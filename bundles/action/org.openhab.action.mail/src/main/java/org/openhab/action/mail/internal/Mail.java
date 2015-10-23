@@ -43,6 +43,7 @@ import org.slf4j.LoggerFactory;
 
 	static boolean tls;
 	static boolean popBeforeSmtp = false;
+	static String charset;
 
 	/**
 	 * Sends an email via SMTP
@@ -111,20 +112,26 @@ import org.slf4j.LoggerFactory;
 			}
 
 			try {
+				if (StringUtils.isNotBlank(charset)) {
+					email.setCharset(charset);
+				}
 				email.setFrom(from);
-				email.addTo(to);
+				String[] toList = to.split(";");
+				for (String toAddress : toList){
+					email.addTo(toAddress);
+				}
 				if(!StringUtils.isEmpty(subject)) email.setSubject(subject);
 				if(!StringUtils.isEmpty(message)) email.setMsg(message);
 				email.send();
 				logger.debug("Sent email to '{}' with subject '{}'.", to, subject);
 				success = true;
 			} catch (EmailException e) {
-				logger.error("Could not send e-mail to '" + to + "‘.", e);
+				logger.error("Could not send e-mail to '" + to + "'.", e);
 			}
 		} else {
 			logger.error("Cannot send e-mail because of missing configuration settings. The current settings are: " +
 					"Host: '{}', port '{}', from '{}', useTLS: {}, username: '{}', password '{}'",
-					new String[] { hostname, String.valueOf(port), from, String.valueOf(tls), username, password} );
+					new Object[] { hostname, String.valueOf(port), from, String.valueOf(tls), username, password} );
 		}
 		
 		return success;
